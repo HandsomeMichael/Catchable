@@ -11,6 +11,10 @@ using Terraria.ModLoader.IO;
 
 namespace Catchable
 {
+
+	/// <summary>
+	/// ModType if i was the one who implement it ( fucking worse )
+	/// </summary>
 	public struct CatchTypeNPC
 	{
 		public const int InvalidID = -696969;
