@@ -13,4 +13,12 @@
 		
 	</ItemGroup>
 
+	<!-- Uninclude -->
+
+	<ItemGroup>
+		<Compile Remove="Old\**" />
+		<EmbeddedResource Remove="Old\**" />
+		<None Remove="Old\**" />
+	</ItemGroup>
+
 </Project>
