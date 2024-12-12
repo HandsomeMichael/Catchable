@@ -1,16 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Catchable.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
 namespace Catchable
 {
+
+	// Still in progress , might cancel cuz requires data per stack
+	// public struct ExtraNPCInfo
+	// {
+	// 	public static bool IsNecessary => true;
+	// 	public int health;
+	// 	public int[] ai;
+	// }
 
 	/// <summary>
 	/// ModType if i was the one who implement it ( fucking worse )
@@ -21,6 +32,11 @@ namespace Catchable
 		internal string _mod;
 		internal string _name;
 		internal int _id;
+
+		/// <summary>
+		/// The npc type , might require updating before shit happen
+		/// </summary>
+		public int Id => _id;
 
 		public CatchTypeNPC(NPC npc)
 		{
@@ -43,6 +59,20 @@ namespace Catchable
 			}
 		}
 
+		public void NetSend(BinaryWriter writer)
+		{
+			writer.Write(_mod);
+			writer.Write(_name);
+			writer.Write(_id);
+		}
+
+		public void NetReceive(BinaryReader reader)
+        {
+			_mod = reader.ReadString();
+			_name = reader.ReadString();
+			_id = reader.ReadInt32(); // idk if this right or not
+        }
+
 		public void SaveData(TagCompound tag)
 		{
 			tag.Add("mod",_mod);
@@ -59,6 +89,11 @@ namespace Catchable
 
 		public bool IsInvalid() => GetLiteralID() == InvalidID;
 
+		/// <summary>
+		/// Get NPC ID while also properly checking it
+		/// </summary>
+		/// <returns></returns>
+		/// <exception cref="Exception"> How the fuck did it fuck up that bad </exception>
 		public int GetLiteralID()
 		{
 			if (_mod == "Terraria")
@@ -91,7 +126,19 @@ namespace Catchable
 
 	public class CatchedItem : ModItem
 	{
+		public static Dictionary<int,FrameHelp> npcFrames;
+
 		public CatchTypeNPC catchType;
+
+        public override void NetSend(BinaryWriter writer)
+        {
+			catchType.NetSend(writer);
+        }
+
+        public override void NetReceive(BinaryReader reader)
+        {
+            catchType.NetReceive(reader);
+        }
 
         public override void SaveData(TagCompound tag)
         {
@@ -115,8 +162,30 @@ namespace Catchable
             return false;
         }
 
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            tooltips.Add(new TooltipLine(Mod,"desc","Unknown NPC"));
+        }
+
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
+			// Asset checking
+			if (catchType.IsInvalid()) return false;
+			Texture2D texture = Terraria.GameContent.TextureAssets.Npc[catchType.Id].Value;
+			if (texture == null) return false;
+
+			// Actually drawing wow
+			int frameCount = Main.npcFrameCount[catchType.Id];
+
+			if (frameCount > 0)
+			{
+				spriteBatch.Draw(texture,position,null,drawColor,0f,origin,scale, SpriteEffects.None, 0f);
+			}
+			else 
+			{
+				spriteBatch.Draw(texture,position,null,drawColor,0f,origin,scale, SpriteEffects.None, 0f);
+			}
+			
             return false;
         }
     }
