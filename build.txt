@@ -1,0 +1,3 @@
+displayName = Catchable Anything
+author = Lasthue or Neko
+version = 0.1
