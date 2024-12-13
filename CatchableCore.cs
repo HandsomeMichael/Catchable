@@ -26,7 +26,7 @@ namespace Catchable
 	/// <summary>
 	/// ModType if i was the one who implement it ( fucking worse )
 	/// </summary>
-	public struct CatchTypeNPC
+	public struct CatchType
 	{
 		public const int InvalidID = -696969;
 		internal string _mod;
@@ -38,7 +38,7 @@ namespace Catchable
 		/// </summary>
 		public int Id => _id;
 
-		public CatchTypeNPC(NPC npc)
+		public CatchType(NPC npc)
 		{
 			if (npc == null)
 			{
@@ -124,26 +124,15 @@ namespace Catchable
 		}
 	}
 
-	public class CatchedItem : ModItem
+	public class CatchedNPCItem : ModItem
 	{
 		public static Dictionary<int,FrameHelp> npcFrames;
 
-		public CatchTypeNPC catchType;
+		public CatchType catchType;
 
-        public override void NetSend(BinaryWriter writer)
-        {
-			catchType.NetSend(writer);
-        }
-
-        public override void NetReceive(BinaryReader reader)
-        {
-            catchType.NetReceive(reader);
-        }
-
-        public override void SaveData(TagCompound tag)
-        {
-            catchType.SaveData(tag);
-        }
+        public override void NetSend(BinaryWriter writer){catchType.NetSend(writer);}
+        public override void NetReceive(BinaryReader reader){catchType.NetReceive(reader);}
+        public override void SaveData(TagCompound tag){catchType.SaveData(tag);}
 
         public override void LoadData(TagCompound tag)
         {
@@ -152,7 +141,7 @@ namespace Catchable
 
         public override bool CanStack(Item source)
         {
-			if (source.ModItem is CatchedItem target)
+			if (source.ModItem is CatchedNPCItem target)
 			{
 				if ( target.catchType.GetLiteralID() == catchType.GetLiteralID() )
 				{
