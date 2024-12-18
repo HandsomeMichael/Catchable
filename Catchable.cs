@@ -1,3 +1,4 @@
+using Catchable.Items;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria.ModLoader;
 
@@ -25,6 +26,4 @@ namespace Catchable
         //     AddContent(new BigPoo());
         // }
     }
-
-
 }

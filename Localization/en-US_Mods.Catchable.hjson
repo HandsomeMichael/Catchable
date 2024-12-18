@@ -1,2 +1,18 @@
-# This file will automatically update with entries for new content after a build and reload.
+Items: {
+	CatchedNPCItem: {
+		DisplayName: Catched N P C Item
+		Tooltip: ""
+	}
 
+	CatchedNPC: {
+		DisplayName: Catched N P C
+		Tooltip: ""
+	}
+
+	SuperBugNet: {
+		DisplayName: Super Bug Net
+		Tooltip: ""
+	}
+}
+
+Projectiles.SuperBugNetProj.DisplayName: Super Bug Net Proj

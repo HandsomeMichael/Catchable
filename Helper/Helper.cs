@@ -20,6 +20,18 @@ namespace Catchable.Helper
     public static class Helpme
     {
 
+		/// <summary>
+		/// Magically get frame count outta my ass
+		/// My lawyer told me to not do this since modulo is costly but i lick ass
+		/// </summary>
+		/// <param name="frameCount"> the max frame</param>
+		/// <param name="frameSpeed"> the time of frame changes</param>
+		/// <returns></returns>
+		public static int MagicallyGetFrame(int frameCount , int frameSpeed)
+		{
+			return (int)((Main.GameUpdateCount / frameSpeed) % frameCount);
+		}
+
         /// <summary>
 		/// resize projectile hitbox
 		/// </summary>
