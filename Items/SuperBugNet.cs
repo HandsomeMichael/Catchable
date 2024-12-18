@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Catchable.Helper;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -14,8 +15,7 @@ namespace Catchable.Items
 
 	public class SuperBugNet : ModItem
 	{
-		public int attackType = 0; // keeps track of which attack it is
-		public int comboExpireTimer = 0; // we want the attack pattern to reset if the weapon is not used for certain period of time
+		public int combo = 0;
 
 		public override void SetDefaults() 
         {
@@ -30,8 +30,6 @@ namespace Catchable.Items
 			Item.useStyle = ItemUseStyleID.Shoot;
 
 			Item.autoReuse = true; // This determines whether the weapon has autoswing
-			// Item.damage = 62; // The damage of your sword, this is dynamically adjusted in the projectile code.
-			// Item.DamageType = DamageClass.Melee; // Deals melee damage
 
 			Item.noMelee = true;  // This makes sure the item does not deal damage from the swinging animation
 			Item.noUseGraphic = true; // This makes sure the item does not get shown when the player swings his hand
@@ -41,16 +39,15 @@ namespace Catchable.Items
 		}
 
 		public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
-			// Using the shoot function, we override the swing projectile to set ai[0] (which attack it is)
+			int attackType = 0;
+			combo++;
+			if (combo >= 10)
+			{
+				attackType = 1;
+				combo = 0;
+			}
 			Projectile.NewProjectile(source, position, velocity, type, damage, knockback, Main.myPlayer, attackType);
-			attackType = (attackType + 1) % 2; // Increment attackType to make sure next swing is different
-			comboExpireTimer = 0; // Every time the weapon is used, we reset this so the combo does not expire
 			return false; // return false to prevent original projectile from being shot
-		}
-
-		public override void UpdateInventory(Player player) {
-			if (comboExpireTimer++ >= 120) // after 120 ticks (== 2 seconds) in inventory, reset the attack pattern
-				attackType = 0;
 		}
 
 		// public override void AddRecipes() {
@@ -134,8 +131,6 @@ namespace Catchable.Items
 			Projectile.timeLeft = 10000; // Time it takes for projectile to expire
 			Projectile.penetrate = -1; // Projectile pierces infinitely
 			Projectile.tileCollide = false; // Projectile does not collide with tiles
-			Projectile.usesLocalNPCImmunity = true; // Uses local immunity frames
-			Projectile.localNPCHitCooldown = -1; // We set this to -1 to make sure the projectile doesn't hit twice
 			Projectile.ownerHitCheck = true; // Make sure the owner of the projectile has line of sight to the target (aka can't hit things through tile).
 			Projectile.DamageType = DamageClass.Melee; // Projectile is a melee projectile
 		}
@@ -170,18 +165,104 @@ namespace Catchable.Items
 			writer.Write((sbyte)Projectile.spriteDirection);
 		}
 
-		public override void ReceiveExtraAI(BinaryReader reader) {
+		public override void ReceiveExtraAI(BinaryReader reader) 
+		{
 			Projectile.spriteDirection = reader.ReadSByte();
 		}
 
-        public void ApplyBugNet()
-        {
-            if (Owner.TryGetModPlayer<CatchablePlayer>(out var modPlayer))
-            {
-                Main.NewText("bugnetted ass");
-                modPlayer.bugnetting = true;
-            }
-        }
+		void CatchNPC(NPC npc, int who = -1)
+		{
+            int i = npc.whoAmI;
+			if (!npc.active)return;
+			if (who == -1)
+			{
+				who = Main.myPlayer;
+			}
+			if (Main.netMode == NetmodeID.MultiplayerClient)
+			{
+				npc.active = false;
+				NetMessage.SendData(MessageID.BugCatching, -1, -1, null, i, who);
+			}
+			else
+			{
+				if (npc.type == 687)
+				{
+					TryTeleportingCaughtMysticFrog(npc);
+				}
+				else if (npc.SpawnedFromStatue)
+				{
+					Vector2 vector = npc.Center - new Vector2(20f);
+					Utils.PoofOfSmoke(vector);
+					npc.active = false;
+					NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, i);
+					NetMessage.SendData(MessageID.PoofOfSmoke, -1, -1, null, (int)vector.X, vector.Y);
+				}
+				else
+				{
+                    var source = Main.player[who].GetSource_CatchEntity(npc);
+                    int itemWhoAmI = 0;
+                    if (npc.catchItem > 0)
+                    {
+                        itemWhoAmI = Item.NewItem(source,
+                         (int)Main.player[who].Center.X,
+                          (int)Main.player[who].Center.Y,
+                           0, 0, Main.npc[i].catchItem, 1,
+                            noBroadcast: true, 0, noGrabDelay: true);
+                    }
+                    else
+                    {
+                        itemWhoAmI = Item.NewItem(source,
+                         (int)Main.player[who].Center.X,
+                          (int)Main.player[who].Center.Y,
+                           0, 0, ModContent.ItemType<CatchedNPC>(), 1,
+                            noBroadcast: true, 0, noGrabDelay: true);
+
+                        if (Main.item[itemWhoAmI].ModItem != null && Main.item[itemWhoAmI].ModItem is CatchedNPC boeingplane)
+                        {
+                            boeingplane.catchType.SetTo(npc,Main.item[itemWhoAmI]);
+                        }
+                    }
+					NetMessage.SendData(MessageID.SyncItem, -1, -1, null, itemWhoAmI, 1f);
+					npc.active = false;
+					NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, i);
+				}
+			}
+		}
+
+        // frog
+        public bool TryTeleportingCaughtMysticFrog(NPC npc)
+		{
+            // Check
+			if (Main.netMode == NetmodeID.MultiplayerClient)return false;
+			if (npc.type != 687)return false;
+
+			Vector2 chosenTile = Vector2.Zero;
+			Point point = npc.Center.ToTileCoordinates();
+			if (npc.AI_AttemptToFindTeleportSpot(ref chosenTile, point.X, point.Y, 15, 8))
+			{
+				Vector2 newPos = new Vector2(chosenTile.X * 16f - (float)(npc.width / 2), chosenTile.Y * 16f - (float)npc.height);
+				NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, npc.whoAmI);
+				npc.Teleport(newPos, 13);
+				return true;
+			}
+			Vector2 vector = npc.Center - new Vector2(20f);
+			Utils.PoofOfSmoke(vector);
+			npc.active = false;
+			NetMessage.SendData(MessageID.SyncNPC, -1, -1, null, npc.whoAmI);
+			NetMessage.SendData(MessageID.PoofOfSmoke, -1, -1, null, (int)vector.X, vector.Y);
+			return false;
+		}
+
+		void TryCatching()
+		{
+			foreach (var npc in Main.ActiveNPCs)
+			{
+				if (npc != null && CheckCollide(npc.Hitbox))
+				{
+					CatchNPC(npc,Projectile.owner);
+				}
+			}
+		}
 
 		public override void AI() 
         {
@@ -191,13 +272,10 @@ namespace Catchable.Items
 			Owner.itemTime = 2;
 
 			// Kill the projectile if the player dies or gets crowd controlled
-			if (!Owner.active || Owner.dead || Owner.noItems || Owner.CCed) {
+			if (Owner.IsWack(true)) {
 				Projectile.Kill();
 				return;
 			}
-
-            // Apply bug net to player
-            ApplyBugNet();
 
 			// AI depends on stage and attack
 			// Note that these stages are to facilitate the scaling effect at the beginning and end
@@ -208,9 +286,11 @@ namespace Catchable.Items
 					break;
 				case AttackStage.Execute:
 					ExecuteStrike();
+					TryCatching();
 					break;
 				default:
 					UnwindStrike();
+					TryCatching();
 					break;
 			}
 
@@ -218,7 +298,8 @@ namespace Catchable.Items
 			Timer++;
 		}
 
-		public override bool PreDraw(ref Color lightColor) {
+		public override bool PreDraw(ref Color lightColor) 
+		{
 			// Calculate origin of sword (hilt) based on orientation and offset sword rotation (as sword is angled in its sprite)
 			Vector2 origin;
 			float rotationOffset;
@@ -244,7 +325,8 @@ namespace Catchable.Items
 		}
 
 		// Find the start and end of the sword and use a line collider to check for collision with enemies
-		public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox) {
+		public bool CheckCollide(Rectangle targetHitbox) 
+		{
 			Vector2 start = Owner.MountedCenter;
 			Vector2 end = start + Projectile.rotation.ToRotationVector2() * ((Projectile.Size.Length()) * Projectile.scale);
 			float collisionPoint = 0f;
@@ -258,12 +340,7 @@ namespace Catchable.Items
 			Utils.PlotTileLine(start, end, 15 * Projectile.scale, DelegateMethods.CutTiles);
 		}
 
-		// We make it so that the projectile can only do damage in its release and unwind phases
-		public override bool? CanDamage() {
-			if (CurrentStage == AttackStage.Prepare)
-				return false;
-			return base.CanDamage();
-		}
+		public override bool? CanDamage() => false;
 
 		// Function to easily set projectile and arm position
 		public void SetSwordPosition() {
@@ -281,7 +358,8 @@ namespace Catchable.Items
 		}
 
 		// Function facilitating the taking out of the sword
-		private void PrepareStrike() {
+		private void PrepareStrike() 
+		{
 			Progress = WINDUP * SWINGRANGE * (1f - Timer / prepTime); // Calculates rotation from initial angle
 			Size = MathHelper.SmoothStep(0, 1, Timer / prepTime); // Make sword slowly increase in size as we prepare to strike until it reaches max
 
@@ -292,7 +370,8 @@ namespace Catchable.Items
 		}
 
 		// Function facilitating the first half of the swing
-		private void ExecuteStrike() {
+		private void ExecuteStrike() 
+		{
 			if (CurrentAttack == AttackType.Swing) {
 				Progress = MathHelper.SmoothStep(0, SWINGRANGE, (1f - UNWIND) * Timer / execTime);
 

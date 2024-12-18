@@ -40,6 +40,11 @@ namespace Catchable
 
 		public CatchType(NPC npc)
 		{
+			SetTo(npc,null);
+		}
+
+		public void SetTo(NPC npc,Item item)
+		{
 			if (npc == null)
 			{
 				throw new ArgumentNullException("NPC is Null when creating new CatchTypeNPC");
@@ -56,6 +61,12 @@ namespace Catchable
 			{
 				_mod = "Terraria";
 				_name = "";
+			}
+
+
+			if (item != null)
+			{
+				item.makeNPC = npc.type;
 			}
 		}
 
@@ -143,16 +154,14 @@ namespace Catchable
 	public class CatchedNPC : ModItem
 	{
 
-        public override string Texture => "Catchable/Items/Invalid";
+        public override string Texture => "Catchable/Items/Dot";
 		public CatchType catchType;
-
-		// Loading
-        // public override void NetSend(BinaryWriter writer){catchType.NetSend(writer);}
-        // public override void NetReceive(BinaryReader reader)
-		// {
-		// 	catchType.NetReceive(reader);
-		// 	Item.makeNPC = catchType.Id;
-		// }
+        public override void NetSend(BinaryWriter writer){catchType.NetSend(writer);}
+        public override void NetReceive(BinaryReader reader)
+		{
+			catchType.NetReceive(reader);
+			Item.makeNPC = catchType.Id;
+		}
         public override void SaveData(TagCompound tag){catchType.SaveData(tag);}
         public override void LoadData(TagCompound tag)
 		{
@@ -205,16 +214,15 @@ namespace Catchable
 			// Pulled it outta my ass
 			int frameCount = Main.npcFrameCount[catchType.Id];
 			int npcFrame = Helpme.MagicallyGetFrame(frameCount,6);
-
-			float unreasonableScale = 1f;
+			var newFrame = Helpme.GetFrame(texture,npcFrame,frameCount);
 
 			if (frameCount > 0)
 			{
-				spriteBatch.Draw(texture,position,Helpme.GetFrame(texture,npcFrame,frameCount),drawColor,0f,texture.Size()/2f,unreasonableScale, SpriteEffects.None, 0f);
+				spriteBatch.Draw(texture,position,newFrame,drawColor,0f,newFrame.Size() / 2f,scale, SpriteEffects.None, 0f);
 			}
 			else 
 			{
-				spriteBatch.Draw(texture,position,null,drawColor,0f,texture.Size()/2f,unreasonableScale, SpriteEffects.None, 0f);
+				spriteBatch.Draw(texture,position,null,drawColor,0f,origin,scale, SpriteEffects.None, 0f);
 			}
 			
             return false;

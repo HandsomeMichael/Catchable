@@ -37,7 +37,7 @@ namespace Catchable
 				// We go through all the subjects to find the required typeId
 				// Only if the name of the item matches the desired one in the current localization (no case sensitive) 
 				for (int k = 1; k < ItemLoader.ItemCount; k++) {
-					if (name.ToLower() == Lang.GetItemNameValue(k).ToLower()) {
+					if (name.ToLower() == Lang.GetNPCNameValue(k).ToLower()) {
 						type = k;
 						break;
 					}
@@ -45,7 +45,7 @@ namespace Catchable
 			}
 
 			if (type <= 0 || type >= ItemLoader.ItemCount)
-				throw new UsageException(string.Format("Unknown item — Must be valid name or 0 < type < {0}", ItemLoader.ItemCount));
+				throw new UsageException(string.Format("Unknown NPC — Must be valid name or 0 < type < {0}", ItemLoader.ItemCount));
 
 			// If the command has at least two arguments, we try to get the stack value
 			// Default stack is 1
@@ -58,6 +58,7 @@ namespace Catchable
 			// Spawn the item where the calling player is
 			int i = caller.Player.QuickSpawnItem(new EntitySource_DebugCommand($"{nameof(Mod)}_balls"), ModContent.ItemType<CatchedNPC>(), stack);
             var item = Main.item[i].ModItem as CatchedNPC;
+			Main.item[i].makeNPC = type;
             item.catchType.SetTerraria(type);
 		}
 	}

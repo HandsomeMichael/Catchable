@@ -20,6 +20,12 @@ namespace Catchable.Helper
     public static class Helpme
     {
 
+
+		public static bool IsWack(this Player player , bool noItems = false)
+		{
+			return !player.active || player.dead || (player.noItems && noItems) || player.CCed;
+		}
+
 		/// <summary>
 		/// Magically get frame count outta my ass
 		/// My lawyer told me to not do this since modulo is costly but i lick ass
