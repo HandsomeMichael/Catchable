@@ -126,19 +126,17 @@ namespace Catchable
 
 	public class CatchedNPCItem : ModItem
 	{
-		public static Dictionary<int,FrameHelp> npcFrames;
+		public FrameHelp npcFrames;
 
 		public CatchType catchType;
 
+		// Loading
         public override void NetSend(BinaryWriter writer){catchType.NetSend(writer);}
         public override void NetReceive(BinaryReader reader){catchType.NetReceive(reader);}
         public override void SaveData(TagCompound tag){catchType.SaveData(tag);}
+        public override void LoadData(TagCompound tag){catchType.LoadData(tag);}
 
-        public override void LoadData(TagCompound tag)
-        {
-            catchType.LoadData(tag);
-        }
-
+		// Stacking
         public override bool CanStack(Item source)
         {
 			if (source.ModItem is CatchedNPCItem target)
@@ -159,12 +157,15 @@ namespace Catchable
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
 			// Asset checking
-			if (catchType.IsInvalid()) return false;
+			if (catchType.IsInvalid()) 
+			{
+				
+			}
 			Texture2D texture = Terraria.GameContent.TextureAssets.Npc[catchType.Id].Value;
 			if (texture == null) return false;
 
 			// Actually drawing wow
-			int frameCount = Main.npcFrameCount[catchType.Id];
+			int frameCount = npcFrames.frame;
 
 			if (frameCount > 0)
 			{

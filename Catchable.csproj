@@ -13,7 +13,7 @@
 		
 	</ItemGroup>
 
-	<!-- Uninclude -->
+	<!-- Uninclude . uhhhh what the fuck , why not work -->
 
 	<ItemGroup>
 		<Compile Remove="Old\**" />

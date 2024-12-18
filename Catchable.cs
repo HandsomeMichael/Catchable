@@ -1,15 +1,29 @@
+using Microsoft.Xna.Framework.Graphics;
 using Terraria.ModLoader;
 
 namespace Catchable
 {
     public class Catchable : Mod 
     {
-        public override void Load()
+
+        public static Texture2D InvalidTexture;
+
+        public override void PostSetupContent()
         {
-            //  I was feeling dubious
-            
-            // AddContent(new BigPoo());
+            InvalidTexture = ModContent.Request<Texture2D>("Catchable/Items/Invalid").Value;
         }
+
+        public override void Unload()
+        {
+           InvalidTexture = null;
+        }
+
+        // We will not be doing the same code 
+
+        // public override void Load()
+        // {
+        //     AddContent(new BigPoo());
+        // }
     }
 
 

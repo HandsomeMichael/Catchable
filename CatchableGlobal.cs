@@ -15,4 +15,12 @@ namespace Catchable
     {
            
     }
+
+    public class Unloader : ModSystem
+    {
+        public override void OnWorldUnload()
+        {
+            base.OnWorldUnload();
+        }
+    }
 }

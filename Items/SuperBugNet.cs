@@ -1,29 +1,42 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace Catchable
+namespace Catchable.Items
 {
 
     public class SuperBugNet : ModItem
     {
 
     }
-    public abstract class SuperBugNetProj : ModProjectile
+    public class SuperBugNetProj : ModProjectile
     {
-        public static short[] Instances;
+
+        public const int Instances_Max = 100;
+        public static int[] Instances;
+
+        public override void Load()
+        {
+            ResetInstances();
+        }
+
+        public override void Unload()
+        {
+            Instances = null;
+        }
 
         public static void ResetInstances()
         {
+            Instances = new int[Instances_Max];
             for (int i = 0; i < Instances.Length; i++)
             {
                 Instances[i] = -1;
             }
         }
 
-        public short instanceKey 
+        public int instanceKey 
         {
-            get { return (short)Projectile.ai[0]; }
-            set { Projectile.ai[0] = value;}
+            get { return (int)Projectile.ai[1]; }
+            set { Projectile.ai[1] = value;}
         }
 
         public void DeleteKey()
@@ -35,6 +48,7 @@ namespace Catchable
             }
 
             Instances[instanceKey] = -1;
+            instanceKey = -1;
         }
 
         public void AssignKey()
@@ -43,7 +57,12 @@ namespace Catchable
             {
                 for (int i = 0; i < Instances.Length; i++)
                 {
-                    
+                    if (Instances[i] == -1)
+                    {
+                        Instances[i] = Projectile.whoAmI;
+                        instanceKey = i;
+                        Main.NewText("Sucessfully assigned key to "+i);
+                    }
                 }
             }
         }
@@ -61,11 +80,6 @@ namespace Catchable
         public override void OnKill(int timeLeft)
         {
             DeleteKey();
-        }
-
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            base.OnHitNPC(target, hit, damageDone);
         }
     }
 }
