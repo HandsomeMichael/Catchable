@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Reflection;
 using Terraria.ModLoader.Config;
+using System.Text;
 
 namespace Catchable.Helper
 {
@@ -20,6 +21,38 @@ namespace Catchable.Helper
     public static class Helpme
     {
 
+		// I got 2 word warping method for no reason at all
+		public static List<string> WordWrap( string text, int maxLineLength )
+		{
+			var list = new List<string>();
+
+			int currentIndex;
+			var lastWrap = 0;
+			var whitespace = new[] { ' ', '\r', '\n', '\t' };
+			do
+			{
+				currentIndex = lastWrap + maxLineLength > text.Length ? text.Length : (text.LastIndexOfAny( new[] { ' ', ',', '.', '?', '!', ':', ';', '-', '\n', '\r', '\t' }, Math.Min( text.Length - 1, lastWrap + maxLineLength)  ) + 1);
+				if( currentIndex <= lastWrap )
+					currentIndex = Math.Min( lastWrap + maxLineLength, text.Length );
+				list.Add( text.Substring( lastWrap, currentIndex - lastWrap ).Trim( whitespace ) );
+				lastWrap = currentIndex;
+			} while( currentIndex < text.Length );
+
+			return list;
+		}
+
+		public static string WordWarpGPT(this string input, int chunkSize)
+		{
+			if (chunkSize <= 0) throw new ArgumentOutOfRangeException();
+			var o = new StringBuilder(); int l = 0;
+			foreach (var w in input.Split(' '))
+			{
+				if (l + w.Length > chunkSize) { if (l > 0) o.AppendLine(); l = 0; }
+				if (l > 0) o.Append(' ');
+				o.Append(w); l += w.Length + (l > 0 ? 1 : 0);
+			}
+			return o.ToString();
+		}
 
 		public static bool IsWack(this Player player , bool noItems = false)
 		{
