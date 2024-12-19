@@ -6,9 +6,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Catchable.Helper;
+using Catchable.Items;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.GameContent.Bestiary;
 using Terraria.ID;
@@ -70,6 +72,39 @@ namespace Catchable
 			if (item != null)
 			{
 				item.makeNPC = npc.type;
+			}
+		}
+
+		public void SetTo(Projectile projectile,Item item)
+		{
+			if (projectile == null)
+			{
+				throw new ArgumentNullException("Projectile is Null when creating new CatchTypeProjectile");
+			}
+
+			_id = projectile.type;
+
+			if (projectile.ModProjectile != null)
+			{
+				if (projectile.ModProjectile is not SuperBugNetProj)
+				{
+					_mod = projectile.ModProjectile.Mod.Name;
+					_name = projectile.ModProjectile.Name;
+				}
+			}
+			else
+			{
+				_mod = "Terraria";
+				_name = "";
+			}
+
+
+			if (item != null)
+			{
+				item.shoot = projectile.type;
+				item.damage = projectile.damage/2;
+				// item.shoot = ModContent.ProjectileType<MyDummyProjectile>();
+				item.DamageType = projectile.DamageType;
 			}
 		}
 
@@ -321,6 +356,121 @@ namespace Catchable
 			}
 			
             return false;
+        }
+    }
+
+	public class CatchedProjectile : ModItem
+	{
+        public override string Texture => "Catchable/Items/Dot";
+		public CatchType catchType;
+        public override void NetSend(BinaryWriter writer)
+		{
+			catchType.VerifyProjID();
+			catchType.NetSend(writer);
+		}
+        public override void NetReceive(BinaryReader reader)
+		{
+			catchType.NetReceive(reader);
+			catchType.VerifyProjID();
+		}
+        public override void SaveData(TagCompound tag)
+		{
+			catchType.VerifyProjID();
+			catchType.SaveData(tag);
+		}
+        public override void LoadData(TagCompound tag)
+		{
+			catchType.LoadData(tag);
+			catchType.VerifyProjID();
+		}
+
+		// Stacking
+        public override bool CanStack(Item source)
+        {
+			if (source.ModItem != null && source.ModItem is CatchedProjectile target)
+			{
+				if ( target.catchType.Id == catchType.Id)
+				{
+					return true;
+				}
+			}
+            return false;
+        }
+
+		public override void SetDefaults() 
+		{
+			Item.damage = 1;
+			Item.useStyle = ItemUseStyleID.Swing;
+			Item.autoReuse = true;
+			Item.useTurn = true;
+			Item.useAnimation = 15;
+			Item.useTime = 15;
+			Item.maxStack = 999;
+			Item.consumable = true;
+			Item.width = 12;
+			Item.height = 12;
+			Item.noUseGraphic = true;
+			// Item.shoot = proj;
+			Item.shootSpeed = 11f;
+		}
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+			foreach (var item in tooltips)
+			{
+				if (item.Name == "ItemName")
+				{
+					item.Text = Lang.GetProjectileName(catchType.Id).Value;
+				}
+			}
+        }
+
+		public override void UpdateInventory(Player player)
+		{
+			Item.shoot = catchType.Id;
+			if (player.HeldItem != null && player.HeldItem.useAmmo > 0)
+			{
+				Item.ammo = player.HeldItem.useAmmo;
+			}
+
+		}
+
+        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback)
+        {
+			var projectile = Projectile.NewProjectileDirect(source, position,velocity,type,damage,knockback,player.whoAmI);
+			projectile.hostile = false;
+			projectile.friendly = true;
+            return false;
+        }
+
+        public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
+        {
+			// Check id
+			if (!catchType.ValidProj()) return true;
+
+			// Check texture
+			Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[catchType.Id].Value;
+			if (texture == null) return true;
+
+			float adjustedScale = Math.Min(1f, 52f / texture.Height);
+			spriteBatch.Draw(texture,position,null,drawColor,0f,texture.Size()/2f,adjustedScale, SpriteEffects.None, 0f);
+			
+            return false;
+        }
+    }
+
+	public class Amongus : GlobalProjectile
+	{
+        public override void OnSpawn(Projectile projectile, IEntitySource source)
+        {
+            if (source is EntitySource_ItemUse_WithAmmo ammoSource )
+			{
+				if (ammoSource.AmmoItemIdUsed == ModContent.ItemType<CatchedProjectile>())
+				{
+					projectile.hostile = false;
+					projectile.friendly = true;
+				}
+			}
         }
     }
 }

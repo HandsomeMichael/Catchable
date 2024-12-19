@@ -253,6 +253,25 @@ namespace Catchable.Items
 			return false;
 		}
 
+		void CatchProjectile(Projectile projectile)
+		{
+			var source = Owner.GetSource_ItemUse(Owner.HeldItem,"Catching Goth Mommy");
+			int i = Item.NewItem(source,Owner.Center,0, 0, ModContent.ItemType<CatchedProjectile>(), 1,noBroadcast: true, 0, noGrabDelay: true);
+			Item item = Main.item[i];
+			if (item.ModItem != null && item.ModItem is CatchedProjectile boeingplane)
+			{
+				boeingplane.catchType.SetTo(projectile,Main.item[i]);
+			}
+			else 
+			{
+				Main.NewText("You just discovered a 1 in a kajillion bajillion chance of rare Error :D");
+				Mod.Logger.Error("How the fuck did this item got creaated then");
+			}
+			NetMessage.SendData(MessageID.SyncItem, -1, -1, null, i, 1f);
+			projectile.active = false;
+			NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, projectile.whoAmI);
+		}
+
 		void TryCatching()
 		{
 			foreach (var npc in Main.ActiveNPCs)
@@ -260,6 +279,15 @@ namespace Catchable.Items
 				if (npc != null && CheckCollide(npc.Hitbox))
 				{
 					CatchNPC(npc,Projectile.owner);
+				}
+			}
+
+			// might move this function around global proj
+			foreach (var proj in Main.ActiveProjectiles)
+			{
+				if (proj != null && proj.type != Projectile.type && CheckCollide(proj.Hitbox))
+				{
+					CatchProjectile(proj);
 				}
 			}
 		}

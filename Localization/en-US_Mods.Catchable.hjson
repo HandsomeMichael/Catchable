@@ -13,6 +13,14 @@ Items: {
 		DisplayName: Super Bug Net
 		Tooltip: ""
 	}
+
+	CatchedProjectile: {
+		DisplayName: Catched Projectile
+		Tooltip: ""
+	}
 }
 
-Projectiles.SuperBugNetProj.DisplayName: Super Bug Net Proj
+Projectiles: {
+	SuperBugNetProj.DisplayName: Super Bug Net Proj
+	MyDummyProjectile.DisplayName: My Dummy Projectile
+}
