@@ -21,14 +21,6 @@ using Terraria.ModLoader.IO;
 namespace Catchable
 {
 
-	// Still in progress , might cancel cuz requires data per stack
-	// public struct ExtraNPCInfo
-	// {
-	// 	public static bool IsNecessary => true;
-	// 	public int health;
-	// 	public int[] ai;
-	// }
-
 	/// <summary>
 	/// ModType if i was the one who implement it ( fucking worse )
 	/// </summary>
@@ -37,6 +29,12 @@ namespace Catchable
 		internal string _mod;
 		internal string _name;
 		internal int _id;
+
+		/// <summary>
+		/// Some projectile or npcs are not intended to be catched
+		/// But fuck that , we just give player a warning thats it :D
+		/// </summary>
+		public bool notIntended;
 
 		/// <summary>
 		/// The npc type , might require updating before shit happen
@@ -72,6 +70,12 @@ namespace Catchable
 			if (item != null)
 			{
 				item.makeNPC = npc.type;
+				item.color = npc.color;
+				item.SetNameOverride(Lang.GetNPCName(npc.type).Value);
+				if (npc.realLife != -1 || npc.CanBeChasedBy(null))
+				{
+					notIntended = true;
+				}
 			}
 		}
 
@@ -105,6 +109,12 @@ namespace Catchable
 				item.damage = projectile.damage/2;
 				// item.shoot = ModContent.ProjectileType<MyDummyProjectile>();
 				item.DamageType = projectile.DamageType;
+				item.SetNameOverride(Lang.GetProjectileName(projectile.type).Value);
+
+				if (projectile.ownerHitCheck || projectile.isAPreviewDummy || projectile.minion)
+				{
+					notIntended = true;
+				}
 			}
 		}
 
@@ -120,6 +130,7 @@ namespace Catchable
 			writer.Write(_mod);
 			writer.Write(_name);
 			writer.Write(_id);
+			writer.Write(notIntended);
 		}
 
 		public void NetReceive(BinaryReader reader)
@@ -127,6 +138,7 @@ namespace Catchable
 			_mod = reader.ReadString();
 			_name = reader.ReadString();
 			_id = reader.ReadInt32(); // idk if this right or not
+			notIntended = reader.ReadBoolean();
         }
 
 		// One thing to notice is that terraria has auto save
@@ -136,6 +148,7 @@ namespace Catchable
 			tag.Add("mod",_mod);
 			tag.Add("name",_name);
 			tag.Add("id",_id);
+			tag.Add("intent",notIntended);
 		}
 
 		public void LoadData(TagCompound tag)
@@ -143,6 +156,7 @@ namespace Catchable
 			_mod = tag.GetString("mod");
 			_name = tag.GetString("name");
 			_id = tag.GetInt("id");
+			notIntended = tag.GetBool("intent");
 		}
 
 		public bool ValidNPC() => Id > 0 && Id <= NPCLoader.NPCCount;
@@ -320,6 +334,11 @@ namespace Catchable
 				tooltips.Add(new TooltipLine(Mod,"BestiaryNone","No description found for this NPC"));
 			}
 
+			if (catchType.notIntended)
+			{
+				tooltips.Add(new TooltipLine(Mod,"Intented","Might not be intended to catch") {OverrideColor = Color.LightYellow});
+			}
+
 			foreach (var item in tooltips)
 			{
 				if (item.Name == "ItemName")
@@ -335,25 +354,13 @@ namespace Catchable
 			if (!catchType.ValidNPC()) return true;
 
 			// Check texture
+			Main.instance.LoadNPC(catchType.Id);
 			Texture2D texture = Terraria.GameContent.TextureAssets.Npc[catchType.Id].Value;
 			if (texture == null) return true;
 
 			int frameCount = Main.npcFrameCount[catchType.Id];
 
-			if (frameCount > 0)
-			{
-				// Pulled it outta my ass
-				int npcFrame = Helpme.MagicallyGetFrame(frameCount,6);
-				var newFrame = Helpme.GetFrame(texture,npcFrame,frameCount);
-				float adjustedScale = Math.Min(1f, 52f / newFrame.Height);
-
-				spriteBatch.Draw(texture,position,newFrame,drawColor,0f,newFrame.Size() / 2f,adjustedScale, SpriteEffects.None, 0f);
-			}
-			else 
-			{
-				float adjustedScale = Math.Min(1f, 52f / texture.Height);
-				spriteBatch.Draw(texture,position,null,drawColor,0f,texture.Size()/2f,adjustedScale, SpriteEffects.None, 0f);
-			}
+			Helpme.DrawInventory(spriteBatch,position,drawColor,texture,frameCount);
 			
             return false;
         }
@@ -361,6 +368,7 @@ namespace Catchable
 
 	public class CatchedProjectile : ModItem
 	{
+
         public override string Texture => "Catchable/Items/Dot";
 		public CatchType catchType;
         public override void NetSend(BinaryWriter writer)
@@ -416,6 +424,11 @@ namespace Catchable
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
+			if (catchType.notIntended)
+			{
+				tooltips.Add(new TooltipLine(Mod,"Intented","Might not be intended to catch") {OverrideColor = Color.LightYellow});
+			}
+
 			foreach (var item in tooltips)
 			{
 				if (item.Name == "ItemName")
@@ -442,18 +455,19 @@ namespace Catchable
 			projectile.friendly = true;
             return false;
         }
-
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
 			// Check id
 			if (!catchType.ValidProj()) return true;
 
 			// Check texture
+			Main.instance.LoadProjectile(catchType.Id);
 			Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[catchType.Id].Value;
 			if (texture == null) return true;
 
-			float adjustedScale = Math.Min(1f, 52f / texture.Height);
-			spriteBatch.Draw(texture,position,null,drawColor,0f,texture.Size()/2f,adjustedScale, SpriteEffects.None, 0f);
+			int frameCount = Main.projFrames[catchType.Id];
+
+			Helpme.DrawInventory(spriteBatch,position,drawColor,texture,frameCount);
 			
             return false;
         }

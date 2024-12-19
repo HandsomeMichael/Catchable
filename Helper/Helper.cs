@@ -362,14 +362,50 @@ namespace Catchable.Helper
 			}
 		}
 
-        /// <summary>
-		/// Get frame from texture
-		/// </summary>
-        public static Rectangle GetFrame(this Texture2D Texture, int frame, int maxframe) {
-			int frameHeight = Texture.Height / maxframe;
-			int startY = frameHeight * frame;
-			return new Rectangle(0, startY, Texture.Width, frameHeight);
+        public static Rectangle GetHorizontalFrame(this Texture2D texture, int frame, int maxFrame)
+		{
+			int frameWidth = texture.Width / maxFrame;
+			int startX = frameWidth * frame;
+			return new Rectangle(startX, 0, frameWidth, texture.Height);
 		}
+
+		public static Rectangle GetVerticalFrame(this Texture2D texture, int frame, int maxFrame)
+		{
+			int frameHeight = texture.Height / maxFrame;
+			int startY = frameHeight * frame;
+			return new Rectangle(0, startY, texture.Width, frameHeight);
+		}
+
+		public static void DrawInventory(SpriteBatch spriteBatch,Vector2 position , Color drawColor,Texture2D texture, int frameCount)
+		{
+			if (frameCount > 0)
+			{
+				// Pulled it outta my ass
+				int animFrame = Helpme.MagicallyGetFrame(frameCount,6);
+				float adjustedScale = 1f;
+				// prevents 0 division error if its happen somehow
+				Rectangle newFrame = new Rectangle(1,1,1,1);
+
+				if (texture.Width > texture.Height){
+					newFrame = texture.GetHorizontalFrame(animFrame,frameCount);
+					adjustedScale = Math.Min(1f, 52f / newFrame.Height); 
+				}
+				else 
+				{
+					newFrame = texture.GetVerticalFrame(animFrame,frameCount);
+					adjustedScale = Math.Min(1f, 52f / newFrame.Width); 
+				}
+
+				spriteBatch.Draw(texture,position,newFrame,drawColor,0f,newFrame.Size() / 2f,adjustedScale, SpriteEffects.None, 0f);
+			}
+			else 
+			{
+				float adjustedScale = Math.Min(1f, 52f / texture.Height);
+				spriteBatch.Draw(texture,position,null,drawColor,0f,texture.Size()/2f,adjustedScale, SpriteEffects.None, 0f);
+			}
+		}
+
+
 
 		/// <summary>
 		/// Cycle between color smoothly
