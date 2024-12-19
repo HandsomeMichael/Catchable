@@ -46,6 +46,43 @@ namespace Catchable
 			SetTo(npc,null);
 		}
 
+		// Made by GPT wow. killing my self rn
+		public static int DetermineNPCRarity(NPC npc)
+		{
+			// Weights for different stats
+			const float HPWeight = 0.5f;
+			const float DamageWeight = 0.3f;
+			const float DefenseWeight = 0.2f;
+			const float KnockbackResistBonus = 20f;
+
+			// Compute the score
+			float score = 
+				(npc.lifeMax * HPWeight) + 
+				(npc.damage * DamageWeight) + 
+				(npc.defense * DefenseWeight);
+
+			// Add a bonus for low knockback resistance
+			if (npc.knockBackResist < 0.5f)
+			{
+				score += KnockbackResistBonus * (1 - npc.knockBackResist);
+			}
+
+			// Assign rarity based on the score
+			if (score >= 1500)
+				return ItemRarityID.Red;  // Extreme stats (e.g., Moon Lord)
+			else if (score >= 1000)
+				return ItemRarityID.Lime;      // Very powerful (e.g., bosses like Plantera)
+			else if (score >= 500)
+				return ItemRarityID.Pink;     // Strong Hardmode enemies
+			else if (score >= 250)
+				return ItemRarityID.Purple;     // Average Hardmode or elite pre-Hardmode
+			else if (score >= 80)
+				return ItemRarityID.Green;    // Common Hardmode or rare pre-Hardmode
+			else
+				return ItemRarityID.Blue;     // Common pre-Hardmode
+		}
+
+
 		public void SetTo(NPC npc,Item item)
 		{
 			if (npc == null)
@@ -72,7 +109,10 @@ namespace Catchable
 				item.makeNPC = npc.type;
 				item.color = npc.color;
 				item.SetNameOverride(Lang.GetNPCName(npc.type).Value);
-				if (npc.realLife != -1 || npc.CanBeChasedBy(null))
+				// why is npc value is a float wtf
+				item.value = (int)npc.value;
+				item.rare = DetermineNPCRarity(npc);
+				if ((npc.realLife != -1 && npc.realLife != npc.whoAmI) || npc.type == NPCID.TargetDummy)
 				{
 					notIntended = true;
 				}
@@ -166,20 +206,20 @@ namespace Catchable
 		/// Verify if id is a valid npc id
 		/// </summary>
 		/// <returns></returns>
-		public string VerifyNPCID()
+		public bool VerifyNPCID()
 		{
 			if (_mod == "Terraria")
 			{
 				if (_id == 0 || _id > NPCID.Count)
 				{
-					return "Terraria : invalid id";
+					return false;
 				}
-				return "Vanilla Success";
+				return true;
 			}
 
 			if (_mod == "" || _name == "" || _mod == null || _name == null)
 			{
-				return "Error : Dont grab the stickman dumbass";
+				return false;
 			}
 
 			if (ModContent.TryFind(_mod, _name, out ModNPC npc))
@@ -187,38 +227,38 @@ namespace Catchable
 				if (npc.Type != _id)
 				{
 					_id = npc.Type;
-					return "Warn : ID Manual Fix";
+					return true;
 				}
 
 				if (npc.Type > NPCLoader.NPCCount)
 				{
-					return "Error : how the fuck";
+					return false;
 				}
 
-				return "Mod Success";
+				return true;
 			}
 
-			return "Error : No possible connection";
+			return false;
 		}
 
 		/// <summary>
 		/// Verify if id is a valid projectile id
 		/// </summary>
 		/// <returns></returns>
-		public string VerifyProjID()
+		public bool VerifyProjID()
 		{
 			if (_mod == "Terraria")
 			{
 				if (_id == 0 || _id > ProjectileID.Count)
 				{
-					return "Terraria : invalid id";
+					return false;
 				}
-				return "Vanilla Success";
+				return true;
 			}
 
 			if (_mod == "" || _name == "" || _mod == null || _name == null)
 			{
-				return "Error : Dont grab the stickman dumbass";
+				return false;
 			}
 
 			if (ModContent.TryFind(_mod, _name, out ModProjectile npc))
@@ -226,18 +266,18 @@ namespace Catchable
 				if (npc.Type != _id)
 				{
 					_id = npc.Type;
-					return "Warn : ID Manual Fix";
+					return true;
 				}
 
 				if (npc.Type > ProjectileLoader.ProjectileCount)
 				{
-					return "Error : how the fuck";
+					return false;
 				}
 
-				return "Mod Success";
+				return true;
 			}
 
-			return "Error : No possible connection";
+			return false;
 		}
 	}
 
@@ -249,23 +289,33 @@ namespace Catchable
 		{
 			catchType.VerifyNPCID();
 			catchType.NetSend(writer);
+			writer.Write(Item.rare);
 		}
         public override void NetReceive(BinaryReader reader)
 		{
 			catchType.NetReceive(reader);
-			catchType.VerifyNPCID();
-			Item.makeNPC = catchType.Id;
+			Item.rare = reader.ReadInt32();
+			if (catchType.VerifyNPCID())
+			{
+				Item.SetNameOverride(Lang.GetNPCName(catchType.Id).Value);
+				Item.makeNPC = catchType.Id;
+			}
 		}
         public override void SaveData(TagCompound tag)
 		{
 			catchType.VerifyNPCID();
 			catchType.SaveData(tag);
+			tag.Add("rare",Item.rare);
 		}
         public override void LoadData(TagCompound tag)
 		{
 			catchType.LoadData(tag);
-			catchType.VerifyNPCID();
-			Item.makeNPC = catchType.Id;
+			Item.rare = tag.GetInt("rare");
+			if (catchType.VerifyNPCID())
+			{
+				Item.SetNameOverride(Lang.GetNPCName(catchType.Id).Value);
+				Item.makeNPC = catchType.Id;
+			}
 		}
 
 		// Stacking
@@ -338,14 +388,6 @@ namespace Catchable
 			{
 				tooltips.Add(new TooltipLine(Mod,"Intented","Might not be intended to catch") {OverrideColor = Color.LightYellow});
 			}
-
-			foreach (var item in tooltips)
-			{
-				if (item.Name == "ItemName")
-				{
-					item.Text = Lang.GetNPCNameValue(catchType.Id);
-				}
-			}
         }
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
@@ -368,28 +410,38 @@ namespace Catchable
 
 	public class CatchedProjectile : ModItem
 	{
-
         public override string Texture => "Catchable/Items/Dot";
 		public CatchType catchType;
         public override void NetSend(BinaryWriter writer)
 		{
 			catchType.VerifyProjID();
 			catchType.NetSend(writer);
+			writer.Write(Item.damage);
 		}
         public override void NetReceive(BinaryReader reader)
 		{
 			catchType.NetReceive(reader);
-			catchType.VerifyProjID();
+			Item.damage = reader.ReadInt32();
+			if (catchType.VerifyProjID())
+			{
+				Item.SetNameOverride(Lang.GetProjectileName(catchType.Id).Value);
+			}
 		}
         public override void SaveData(TagCompound tag)
 		{
 			catchType.VerifyProjID();
 			catchType.SaveData(tag);
+			// we need to save this chud
+			tag.Add("damage",Item.damage);
 		}
         public override void LoadData(TagCompound tag)
 		{
 			catchType.LoadData(tag);
-			catchType.VerifyProjID();
+			Item.damage = tag.GetInt("damage");
+			if (catchType.VerifyProjID())
+			{
+				Item.SetNameOverride(Lang.GetProjectileName(catchType.Id).Value);
+			}
 		}
 
 		// Stacking
@@ -427,14 +479,6 @@ namespace Catchable
 			if (catchType.notIntended)
 			{
 				tooltips.Add(new TooltipLine(Mod,"Intented","Might not be intended to catch") {OverrideColor = Color.LightYellow});
-			}
-
-			foreach (var item in tooltips)
-			{
-				if (item.Name == "ItemName")
-				{
-					item.Text = Lang.GetProjectileName(catchType.Id).Value;
-				}
 			}
         }
 
