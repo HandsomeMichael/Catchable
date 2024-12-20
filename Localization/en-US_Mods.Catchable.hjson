@@ -5,22 +5,31 @@ Items: {
 	}
 
 	CatchedNPC: {
-		DisplayName: Catched N P C
+		DisplayName: Catched Mobs
 		Tooltip: ""
 	}
 
 	SuperBugNet: {
 		DisplayName: Super Bug Net
-		Tooltip: ""
+		Tooltip:
+			'''
+			Use to catch anything
+			<right> To spin catch
+			'''
 	}
 
 	CatchedProjectile: {
 		DisplayName: Catched Projectile
 		Tooltip: ""
 	}
+
+	DeveloGun: {
+		DisplayName: Develo Gun
+		Tooltip: Shoot
+	}
 }
 
 Projectiles: {
-	SuperBugNetProj.DisplayName: Super Bug Net Proj
-	MyDummyProjectile.DisplayName: My Dummy Projectile
+	SuperBugNetProj.DisplayName: Super Bug Net
+	DeveloGunProj.DisplayName: Develo Gun Proj
 }

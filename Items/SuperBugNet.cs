@@ -15,7 +15,7 @@ namespace Catchable.Items
 
 	public class SuperBugNet : ModItem
 	{
-		public int combo = 0;
+		public int altCoolDown = 0;
 
 		public override void SetDefaults() 
         {
@@ -38,13 +38,24 @@ namespace Catchable.Items
 			Item.shoot = ModContent.ProjectileType<SuperBugNetProj>(); // The sword as a projectile
 		}
 
-		public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
+        public override bool AltFunctionUse(Player player) => true;
+        public override bool CanUseItem(Player player)
+        {
+			if (altCoolDown > 0 && player.altFunctionUse == 2 && player.HeldItem.type == Item.type)
+			{
+				CombatText.NewText(player.Hitbox,Color.White,$"On Cooldown {altCoolDown / 60}s");
+				SoundEngine.PlaySound(SoundID.MenuClose,player.Center);
+				return false;
+			}
+            return base.CanUseItem(player);
+        }
+
+        public override bool Shoot(Player player, EntitySource_ItemUse_WithAmmo source, Vector2 position, Vector2 velocity, int type, int damage, float knockback) {
 			int attackType = 0;
-			combo++;
-			if (combo >= 10)
+			if (altCoolDown <= 0 && player.altFunctionUse == 2)
 			{
 				attackType = 1;
-				combo = 0;
+				altCoolDown = 60 * 3;
 			}
 			Projectile.NewProjectile(source, position, velocity, type, damage, knockback, Main.myPlayer, attackType);
 			return false; // return false to prevent original projectile from being shot

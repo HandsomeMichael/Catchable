@@ -20,7 +20,6 @@ using Terraria.ModLoader.IO;
 
 namespace Catchable
 {
-
 	/// <summary>
 	/// ModType if i was the one who implement it ( fucking worse )
 	/// </summary>
@@ -40,11 +39,6 @@ namespace Catchable
 		/// The npc type , might require updating before shit happen
 		/// </summary>
 		public int Id => _id;
-
-		public CatchType(NPC npc)
-		{
-			SetTo(npc,null);
-		}
 
 		// Made by GPT wow. killing my self rn
 		public static int DetermineNPCRarity(NPC npc)
@@ -336,6 +330,7 @@ namespace Catchable
 			// By defaults create a bunny looking ass
 			Item.CloneDefaults(ItemID.Bunny);
 			Item.rare = ItemRarityID.Blue;
+			Item.ammo = ModContent.ItemType<CatchedNPC>();
 		}
 
 		internal static FieldInfo bestiaryKeyField;
