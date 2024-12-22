@@ -11,6 +11,11 @@ there is a config for more customization :0
 <h1>Changelog</h1>
 
 <details>
+<summary>v.1.1</summary>
+
+- Steam stuff
+
+<details>
 <summary>v.1.0</summary>
 
 - Initial port to 1.4.4
