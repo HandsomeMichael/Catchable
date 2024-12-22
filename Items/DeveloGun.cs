@@ -5,6 +5,7 @@ using Humanizer;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -19,6 +20,8 @@ namespace Catchable.Items
         {
             Item.CloneDefaults(ItemID.Handgun);
             Item.useAmmo = ModContent.ItemType<CatchedNPC>();
+            Item.damage = 0;
+            Item.DamageType = DamageClass.Generic;
         }
 
         public override bool CanConsumeAmmo(Item ammo, Player player)
@@ -66,6 +69,10 @@ namespace Catchable.Items
             SafelyHalfenStats(ref npc.life);
             SafelyHalfenStats(ref npc.defense);
             SafelyHalfenStats(ref npc.damage);
+
+            // uhhh
+            if (npc.type == NPCID.Vampire || npc.type == NPCID.VampireBat)
+            SoundEngine.PlaySound(new SoundStyle("Catchable/Sound/jonathanbanging"),Projectile.Center);
 
             if (npc.TryGetGlobalNPC<BrainWashed>(out var braining))
             {

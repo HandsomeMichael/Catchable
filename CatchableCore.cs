@@ -36,6 +36,11 @@ namespace Catchable
 		public bool notIntended;
 
 		/// <summary>
+		/// Things are unloaded
+		/// </summary>
+		public bool unloaded;
+
+		/// <summary>
 		/// The npc type , might require updating before shit happen
 		/// </summary>
 		public int Id => _id;
@@ -232,6 +237,8 @@ namespace Catchable
 				return true;
 			}
 
+			unloaded = true;
+
 			return false;
 		}
 
@@ -270,6 +277,8 @@ namespace Catchable
 
 				return true;
 			}
+
+			unloaded = true;
 
 			return false;
 		}
@@ -331,6 +340,7 @@ namespace Catchable
 			Item.CloneDefaults(ItemID.Bunny);
 			Item.rare = ItemRarityID.Blue;
 			Item.ammo = ModContent.ItemType<CatchedNPC>();
+			Item.notAmmo = true;
 		}
 
 		internal static FieldInfo bestiaryKeyField;
@@ -347,7 +357,7 @@ namespace Catchable
 
         public bool TryBestiaryDescription(List<TooltipLine> tooltips)
 		{
-			if (!catchType.ValidNPC()) return false;
+			if (!catchType.ValidNPC() || catchType.unloaded) return false;
 
 			// now this is the tricky part , idk if the npc will find its entry correctly without shooting itself
 			var bestiaryEntry = Main.BestiaryDB.FindEntryByNPCID(catchType.Id);
@@ -379,16 +389,54 @@ namespace Catchable
 				tooltips.Add(new TooltipLine(Mod,"BestiaryNone","No description found for this NPC"));
 			}
 
+			if (catchType.Id == NPCID.BestiaryGirl)
+			{
+				tooltips.Add(new TooltipLine(Mod,"Warning","'No putting in jar'"));	
+			}
+
+			if (catchType.Id == NPCID.Painter)
+			{
+				tooltips.Add(new TooltipLine(Mod,"Warning","'God yes , put me in a jar please'"));	
+			}
+
 			if (catchType.notIntended)
 			{
 				tooltips.Add(new TooltipLine(Mod,"Intented","Might not be intended to catch") {OverrideColor = Color.LightYellow});
 			}
+
+			if (catchType.unloaded)
+			{
+				tooltips.Add(new TooltipLine(Mod,"Unloaded","This item didnt loaded properly \n"+$"ID : ({catchType.Id})   [{catchType._mod} : {catchType._name}] ") {OverrideColor = Color.Red});
+			}
+        }
+
+		public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+        {
+
+			if (!catchType.ValidNPC()) {
+				Helpme.DrawInvalid(spriteBatch,Item.Center - Main.screenPosition,rotation);
+				return false;
+			}
+
+			// Check texture
+			Main.instance.LoadNPC(catchType.Id);
+			Texture2D texture = Terraria.GameContent.TextureAssets.Npc[catchType.Id].Value;
+			if (texture == null) return true;
+
+			int frameCount = Main.npcFrameCount[catchType.Id];
+
+			Helpme.DrawInventory(spriteBatch,Item.Center - Main.screenPosition,lightColor,texture,frameCount);
+
+            return false;
         }
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
 			// Check id
-			if (!catchType.ValidNPC()) return true;
+			if (!catchType.ValidNPC()) {
+				Helpme.DrawInvalid(spriteBatch,position,0f);
+				return false;
+			}
 
 			// Check texture
 			Main.instance.LoadNPC(catchType.Id);
@@ -475,12 +523,17 @@ namespace Catchable
 			{
 				tooltips.Add(new TooltipLine(Mod,"Intented","Might not be intended to catch") {OverrideColor = Color.LightYellow});
 			}
+
+			if (catchType.unloaded)
+			{
+				tooltips.Add(new TooltipLine(Mod,"Unloaded","This item didnt loaded properly \n"+$"ID : ({catchType.Id})   [{catchType._mod} : {catchType._name}] ") {OverrideColor = Color.Red});
+			}
         }
 
 		public override void UpdateInventory(Player player)
 		{
 			Item.shoot = catchType.Id;
-			if (player.HeldItem != null && player.HeldItem.useAmmo > 0)
+			if (CatchableConfig.Get.ProjectileAmmo && player.HeldItem != null && player.HeldItem.type != ModContent.ItemType<DeveloGun>() && player.HeldItem.useAmmo > 0)
 			{
 				Item.ammo = player.HeldItem.useAmmo;
 			}
@@ -494,10 +547,33 @@ namespace Catchable
 			projectile.friendly = true;
             return false;
         }
+
+        public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
+        {
+
+			if (!catchType.ValidProj()) {
+				Helpme.DrawInvalid(spriteBatch,Item.Center - Main.screenPosition,rotation);
+				return false;
+			}
+
+			// Check texture
+			Main.instance.LoadProjectile(catchType.Id);
+			Texture2D texture = Terraria.GameContent.TextureAssets.Projectile[catchType.Id].Value;
+			if (texture == null) return true;
+
+			int frameCount = Main.projFrames[catchType.Id];
+
+			Helpme.DrawInventory(spriteBatch,Item.Center - Main.screenPosition,lightColor,texture,frameCount);
+
+            return false;
+        }
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
 			// Check id
-			if (!catchType.ValidProj()) return true;
+			if (!catchType.ValidProj()) {
+				Helpme.DrawInvalid(spriteBatch,position,0f);
+				return false;
+			}
 
 			// Check texture
 			Main.instance.LoadProjectile(catchType.Id);

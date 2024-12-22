@@ -1,3 +1,8 @@
 displayName = Catchable Anything
 author = Lasthue or Neko
-version = 1.0
+version = 1.1
+homepage = https://github.com/HandsomeMichael/Catchable
+hideCode = false
+hideResources = false
+includeSource = true
+buildIgnore = *.csproj, *.user, obj\*, bin\*, .vs\*, Old\*

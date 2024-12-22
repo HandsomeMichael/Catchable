@@ -1,9 +1,4 @@
 Items: {
-	CatchedNPCItem: {
-		DisplayName: Catched N P C Item
-		Tooltip: ""
-	}
-
 	CatchedNPC: {
 		DisplayName: Catched Mobs
 		Tooltip: ""
@@ -25,11 +20,58 @@ Items: {
 
 	DeveloGun: {
 		DisplayName: Develo Gun
-		Tooltip: Shoot
+		Tooltip:
+			'''
+			Shoot out packaged monster
+			Halven monster stats
+			'No vampire inside'
+			'''
 	}
 }
 
 Projectiles: {
 	SuperBugNetProj.DisplayName: Super Bug Net
-	DeveloGunProj.DisplayName: Develo Gun Proj
+	DeveloGunProj.DisplayName: Develo Gun
+}
+
+Configs: {
+	CatchableConfig: {
+		DisplayName: Catchable Config
+
+		CatchProjectile: {
+			Label: Catch Projectile
+			Tooltip:
+				'''
+				Allow Super Bugnet to catch Projectiles
+				[ Default to true ]
+				'''
+		}
+
+		CatchNPC: {
+			Label: Catch NPC
+			Tooltip:
+				'''
+				Allow Super Bugnet to catch NPCs
+				[ Default to true ]
+				'''
+		}
+
+		CatchNPC_Bosses: {
+			Label: Catch Bosses
+			Tooltip:
+				'''
+				Allow Super Bugnet to catch Bosses
+				[ Default to true ]
+				'''
+		}
+
+		ProjectileAmmo: {
+			Label: Projectile Ammo
+			Tooltip:
+				'''
+				Allow catched projectiles be used in firearm
+				[ Default to true ]
+				'''
+		}
+	}
 }

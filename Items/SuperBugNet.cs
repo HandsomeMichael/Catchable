@@ -23,7 +23,7 @@ namespace Catchable.Items
 			Item.width = 46;
 			Item.height = 48;
 			Item.value = Item.sellPrice(gold: 2, silver: 50);
-			Item.rare = ItemRarityID.Green;
+			Item.rare = ItemRarityID.Quest;
 
 			Item.useTime = 40;
 			Item.useAnimation = 40;
@@ -37,6 +37,11 @@ namespace Catchable.Items
 			// Projectile Properties
 			Item.shoot = ModContent.ProjectileType<SuperBugNetProj>(); // The sword as a projectile
 		}
+
+        public override void UpdateInventory(Player player)
+        {
+            if (altCoolDown > 0) altCoolDown--;
+        }
 
         public override bool AltFunctionUse(Player player) => true;
         public override bool CanUseItem(Player player)
@@ -61,12 +66,13 @@ namespace Catchable.Items
 			return false; // return false to prevent original projectile from being shot
 		}
 
-		// public override void AddRecipes() {
-		// 	CreateRecipe()
-		// 		.AddIngredient<ExampleItem>()
-		// 		.AddTile<Tiles.Furniture.ExampleWorkbench>()
-		// 		.Register();
-		// }
+		public override void AddRecipes() {
+			CreateRecipe()
+				.AddIngredient(ItemID.BugNet)
+				.AddIngredient(ItemID.FallenStar,3)
+				.AddTile(TileID.WorkBenches)
+				.Register();
+		}
 	}
 
     /// <summary>
@@ -285,20 +291,26 @@ namespace Catchable.Items
 
 		void TryCatching()
 		{
-			foreach (var npc in Main.ActiveNPCs)
+			if (CatchableConfig.Get.CatchNPC)
 			{
-				if (npc != null && CheckCollide(npc.Hitbox))
+				foreach (var npc in Main.ActiveNPCs)
 				{
-					CatchNPC(npc,Projectile.owner);
+					if (npc != null && CheckCollide(npc.Hitbox) && (npc.boss && !CatchableConfig.Get.CatchNPC_Bosses) )
+					{
+						CatchNPC(npc,Projectile.owner);
+					}
 				}
 			}
 
 			// might move this function around global proj
-			foreach (var proj in Main.ActiveProjectiles)
+			if (CatchableConfig.Get.CatchProjectile)
 			{
-				if (proj != null && proj.type != Projectile.type && CheckCollide(proj.Hitbox))
+				foreach (var proj in Main.ActiveProjectiles)
 				{
-					CatchProjectile(proj);
+					if (proj != null && proj.type != Projectile.type && CheckCollide(proj.Hitbox))
+					{
+						CatchProjectile(proj);
+					}
 				}
 			}
 		}

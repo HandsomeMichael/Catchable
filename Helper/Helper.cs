@@ -376,6 +376,11 @@ namespace Catchable.Helper
 			return new Rectangle(0, startY, texture.Width, frameHeight);
 		}
 
+		public static void DrawInvalid(SpriteBatch spriteBatch , Vector2 Position, float rotation = 0f)
+		{
+			var texture = Catchable.InvalidTexture;
+			spriteBatch.Draw(texture,Position,null,Color.White,rotation,texture.Size() / 2f,1f, SpriteEffects.None, 0f);
+		}
 		public static void DrawInventory(SpriteBatch spriteBatch,Vector2 position , Color drawColor,Texture2D texture, int frameCount)
 		{
 			if (frameCount > 0)
