@@ -15,6 +15,9 @@ there is a config for more customization :0
 
 - Steam stuff
 
+</details>
+
+
 <details>
 <summary>v.1.0</summary>
 
