@@ -29,6 +29,10 @@ namespace Catchable
 		public bool CatchNPC_Bosses;
 
 		[DefaultValue(true)] 
+		[ReloadRequired]
+		public bool DeveloGun_Brainwash;
+
+		[DefaultValue(true)] 
 		public bool ProjectileAmmo;
 	}
 }

@@ -1,6 +1,6 @@
 displayName = Catchable Anything
 author = Lasthue or Neko
-version = 1.1
+version = 1.2
 homepage = https://github.com/HandsomeMichael/Catchable
 hideCode = false
 hideResources = false

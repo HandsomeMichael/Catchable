@@ -15,6 +15,7 @@ namespace Catchable.Items
 {
     public class DeveloGun : ModItem
     {
+        
         int selectedType = 0;
         public override void SetDefaults()
         {
@@ -60,6 +61,47 @@ namespace Catchable.Items
         }
         public override void OnKill(int timeLeft)
         {
+
+            // Visuals from example mod, we're going barebones with this one
+
+			// Play explosion sound
+			SoundEngine.PlaySound(SoundID.Item14, Projectile.position);
+			// Smoke Dust spawn
+			for (int i = 0; i < 50; i++) {
+				Dust dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.Smoke, 0f, 0f, 100, default, 2f);
+				dust.velocity *= 1.4f;
+			}
+
+			// Fire Dust spawn
+			for (int i = 0; i < 80; i++) {
+				Dust dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 3f);
+				dust.noGravity = true;
+				dust.velocity *= 5f;
+				dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.Torch, 0f, 0f, 100, default, 2f);
+				dust.velocity *= 3f;
+			}
+
+			// Large Smoke Gore spawn
+			for (int g = 0; g < 2; g++) {
+				var goreSpawnPosition = new Vector2(Projectile.position.X + Projectile.width / 2 - 24f, Projectile.position.Y + Projectile.height / 2 - 24f);
+				Gore gore = Gore.NewGoreDirect(Projectile.GetSource_FromThis(), goreSpawnPosition, default, Main.rand.Next(61, 64), 1f);
+				gore.scale = 1.5f;
+				gore.velocity.X += 1.5f;
+				gore.velocity.Y += 1.5f;
+				gore = Gore.NewGoreDirect(Projectile.GetSource_FromThis(), goreSpawnPosition, default, Main.rand.Next(61, 64), 1f);
+				gore.scale = 1.5f;
+				gore.velocity.X -= 1.5f;
+				gore.velocity.Y += 1.5f;
+				gore = Gore.NewGoreDirect(Projectile.GetSource_FromThis(), goreSpawnPosition, default, Main.rand.Next(61, 64), 1f);
+				gore.scale = 1.5f;
+				gore.velocity.X += 1.5f;
+				gore.velocity.Y -= 1.5f;
+				gore = Gore.NewGoreDirect(Projectile.GetSource_FromThis(), goreSpawnPosition, default, Main.rand.Next(61, 64), 1f);
+				gore.scale = 1.5f;
+				gore.velocity.X -= 1.5f;
+				gore.velocity.Y -= 1.5f;
+			}
+
             var npc = NPC.NewNPCDirect(Projectile.GetSource_ReleaseEntity("Suprise matafaka"),(int)Projectile.Center.X,(int)Projectile.Center.Y,(int)Projectile.ai[2]);
 
             // halfen stats
@@ -74,7 +116,7 @@ namespace Catchable.Items
             if (npc.type == NPCID.Vampire || npc.type == NPCID.VampireBat)
             SoundEngine.PlaySound(new SoundStyle("Catchable/Sound/jonathanbanging"),Projectile.Center);
 
-            if (npc.TryGetGlobalNPC<BrainWashed>(out var braining))
+            if (CatchableConfig.Get.DeveloGun_Brainwash && npc.TryGetGlobalNPC<BrainWashed>(out var braining))
             {
                 braining.ownedBy = Projectile.owner;
             }
@@ -95,6 +137,11 @@ namespace Catchable.Items
         public override bool InstancePerEntity => true;
         protected override bool CloneNewInstances => true;
 
+        public override bool IsLoadingEnabled(Mod mod)
+        {
+            return CatchableConfig.Get.DeveloGun_Brainwash;
+        }
+
         public override bool PreAI(NPC npc)
         {
             if (ownedBy != -1)
@@ -112,11 +159,11 @@ namespace Catchable.Items
             }
         }
 
-        // public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
-        // {
-        //     if (ownedBy != -1)
-        //     Terraria.UI.Chat.ChatManager.DrawColorCodedString(spriteBatch,FontAssets.DeathText.Value,"brainwash : "+ownedBy,npc.Center - Main.screenPosition,Color.White,0f,Vector2.One,Vector2.One);
-        // }
+        public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            if (ownedBy != -1)
+            Terraria.UI.Chat.ChatManager.DrawColorCodedString(spriteBatch,FontAssets.DeathText.Value,"Brainwashed"+ownedBy,npc.Center - Main.screenPosition,Color.White,0f,Vector2.One,Vector2.One);
+        }
 
         // no hitting hitting
         public override bool CanHitPlayer(NPC npc, Player target, ref int cooldownSlot)

@@ -23,7 +23,7 @@ Items: {
 		Tooltip:
 			'''
 			Shoot out packaged monster
-			Halven monster stats
+			Shooted monster cant be catched
 			'No vampire inside'
 			'''
 	}
@@ -72,6 +72,11 @@ Configs: {
 				Allow catched projectiles be used in firearm
 				[ Default to true ]
 				'''
+		}
+
+		DeveloGun_Brainwash: {
+			Label: Develo Gun_ Brainwash
+			Tooltip: ""
 		}
 	}
 }

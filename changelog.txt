@@ -1,3 +1,4 @@
-I hope with this push , its now public :)
+
+- critical hot fixes with config
 
 Catchable v{ModVersion} has been published to {tMLBuildPurpose} tML v{tMLVersion}.

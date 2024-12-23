@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Catchable.Helper;
 using Catchable.Items;
@@ -45,6 +46,18 @@ namespace Catchable
 		/// </summary>
 		public int Id => _id;
 
+		/// <summary>
+		/// this might be the best method name i ever made
+		/// </summary>
+		public void IphoneFactoryReset()
+		{
+			_id = 0;
+			_mod = "";
+			_name = "";
+			notIntended = false;
+			unloaded = false;
+		}
+
 		// Made by GPT wow. killing my self rn
 		public static int DetermineNPCRarity(NPC npc)
 		{
@@ -81,6 +94,38 @@ namespace Catchable
 				return ItemRarityID.Blue;     // Common pre-Hardmode
 		}
 
+		public void SetTo(Dust dust)
+		{
+			if (dust == null)
+			{
+				throw new ArgumentNullException("Dust is Null when creating new CatchType");
+			}
+
+			_id = dust.type;
+
+			// As you can see, this is a stolen code 
+			// https://github.com/ScalarVector1/DragonLens/blob/master/Content/Tools/Spawners/DustSpawner.cs
+
+			if (dust.type > DustID.Count)
+			{
+				// we cant even sure if this gave any result and not nulls
+				var modDust = DustLoader.GetDust(dust.type);
+
+				if (modDust != null)
+				{
+					_name = modDust.Name;
+					_mod = modDust.Mod.Name;
+				}
+			}
+			else
+			{
+				//We use reflection here to steal the name from DustID of this vanilla dust
+				System.Reflection.FieldInfo[] fields = typeof(DustID).GetFields();
+				_name = fields.FirstOrDefault(n => (short)n.GetValue(null) == dust.type).Name;
+				_name = Regex.Replace(_name, "([a-z])([A-Z])", "$1 $2");
+				_mod = "Terraria";
+			}
+		}
 
 		public void SetTo(NPC npc,Item item)
 		{
@@ -201,6 +246,9 @@ namespace Catchable
 		public bool ValidNPC() => Id > 0 && Id <= NPCLoader.NPCCount;
 		public bool ValidProj() => Id > 0 && Id <= ProjectileLoader.ProjectileCount;
 
+		// somehow , they didnt put a dust count in here idk
+		// public bool ValidDust() => Id > 0 && Id <= DustLoader.;
+
 		/// <summary>
 		/// Verify if id is a valid npc id
 		/// </summary>
@@ -273,6 +321,42 @@ namespace Catchable
 				if (npc.Type > ProjectileLoader.ProjectileCount)
 				{
 					return false;
+				}
+
+				return true;
+			}
+
+			unloaded = true;
+
+			return false;
+		}
+
+		/// <summary>
+		/// Verify if id is a valid dust id
+		/// </summary>
+		/// <returns></returns>
+		public bool VerifyDustID()
+		{
+			if (_mod == "Terraria")
+			{
+				if (_id == 0 || _id > DustID.Count)
+				{
+					return false;
+				}
+				return true;
+			}
+
+			if (_mod == "" || _name == "" || _mod == null || _name == null)
+			{
+				return false;
+			}
+
+			if (ModContent.TryFind(_mod, _name, out ModDust dust))
+			{
+				if (dust.Type != _id)
+				{
+					_id = dust.Type;
+					return true;
 				}
 
 				return true;
