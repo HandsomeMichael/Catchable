@@ -1,4 +1,5 @@
 
-- critical hot fixes with config
+- Critical hot fixes with config
+- Dust Accelerator
 
 Catchable v{ModVersion} has been published to {tMLBuildPurpose} tML v{tMLVersion}.

@@ -11,9 +11,9 @@ Currently in the mod
 - Super Bugnet
 - Develo Shotgun
 - Catched Entities
+- Dust Accelerator
 
 Note to myself :
 
 - Add Develo Shotgun
 - Add Bugnet progression
-- Add Dust Bag again

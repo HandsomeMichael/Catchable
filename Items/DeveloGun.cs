@@ -161,8 +161,15 @@ namespace Catchable.Items
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (ownedBy != -1)
-            Terraria.UI.Chat.ChatManager.DrawColorCodedString(spriteBatch,FontAssets.DeathText.Value,"Brainwashed"+ownedBy,npc.Center - Main.screenPosition,Color.White,0f,Vector2.One,Vector2.One);
+            if (ownedBy != -1 && Main.myPlayer == ownedBy)
+            {
+                var size = Helpme.MeasureString("Team");
+
+                Terraria.UI.Chat.ChatManager.DrawColorCodedString(spriteBatch,
+                FontAssets.MouseText.Value,
+                "Team",npc.Center - Main.screenPosition,
+                Color.LightGreen,0f,size / 2f,Vector2.One);
+            }
         }
 
         // no hitting hitting

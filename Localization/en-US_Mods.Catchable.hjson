@@ -27,6 +27,16 @@ Items: {
 			'No vampire inside'
 			'''
 	}
+
+	DustAcc: {
+		DisplayName: Unassign Dust Accelerator
+		Tooltip:
+			'''
+			Splash a buncha dust
+			<right> to pick nearest dust on mouse
+			Equip to create a trail
+			'''
+	}
 }
 
 Projectiles: {
@@ -75,8 +85,12 @@ Configs: {
 		}
 
 		DeveloGun_Brainwash: {
-			Label: Develo Gun_ Brainwash
-			Tooltip: ""
+			Label: Brainwashed Mobs
+			Tooltip:
+				'''
+				Allow shooted npcs from develo gun to be brainwashed
+				[ Default to true ]
+				'''
 		}
 	}
 }

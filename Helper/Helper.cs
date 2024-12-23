@@ -10,6 +10,9 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Reflection;
 using Terraria.ModLoader.Config;
 using System.Text;
+using ReLogic.Graphics;
+using Terraria.GameContent;
+using Terraria.UI.Chat;
 
 namespace Catchable.Helper
 {
@@ -204,6 +207,13 @@ namespace Catchable.Helper
 			}
 			return (t - from) / (to - from);
 		}
+
+		public static Vector2 MeasureString(this string text,DynamicSpriteFont font = null) {
+			if (font == null) {font = FontAssets.MouseText.Value;}
+			TextSnippet[] snippets = ChatManager.ParseMessage(text, Color.White).ToArray();
+			return ChatManager.GetStringSize(font, snippets, Vector2.One);
+		}
+
 		/// <summary>
 		/// for those who are lazy to cast int :amogus:
 		/// </summary>
