@@ -291,12 +291,18 @@ namespace Catchable.Items
 
 		void TryCatching()
 		{
+			// uhh what
 			if (CatchableConfig.Get.CatchNPC)
 			{
 				foreach (var npc in Main.ActiveNPCs)
 				{
-					if (npc != null && CheckCollide(npc.Hitbox) && (npc.boss && !CatchableConfig.Get.CatchNPC_Bosses) )
+					if (npc != null && CheckCollide(npc.Hitbox) )
 					{
+						if (npc.boss && !CatchableConfig.Get.CatchNPC_Bosses)
+						{
+							//Main.NewText("Passed on boss");
+							continue;
+						}
 						CatchNPC(npc,Projectile.owner);
 					}
 				}
