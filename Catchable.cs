@@ -1,5 +1,7 @@
 using Catchable.Items;
 using Microsoft.Xna.Framework.Graphics;
+using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace Catchable
@@ -17,13 +19,22 @@ namespace Catchable
         public override void Unload()
         {
            InvalidTexture = null;
-        }
-
-        // We will not be doing the same code 
+        } 
 
         // public override void Load()
         // {
-        //     AddContent(new BigPoo());
+        //     // Generate items like in 1.3
+        //     if (!CatchableConfig.Get.GenerateItem) return;
+
+        //     NPC npc = new NPC();
+        //     CatchType npcType = new CatchType();
+        //     for (int i = 1; i < NPCLoader.NPCCount; i++)
+        //     {
+        //         CatchedNPC item = new CatchedNPC();
+        //         npc.SetDefaults(i);
+        //         npcType.SetTo(npc,item.Item);
+        //         AddContent(item);
+        //     }
         // }
     }
 }

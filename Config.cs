@@ -34,5 +34,9 @@ namespace Catchable
 
 		[DefaultValue(true)] 
 		public bool ProjectileAmmo;
+
+		// [DefaultValue(false)]
+		// [ReloadRequired] 
+		// public bool GenerateItem;
 	}
 }

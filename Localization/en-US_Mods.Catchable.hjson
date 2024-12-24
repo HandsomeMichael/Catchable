@@ -92,5 +92,10 @@ Configs: {
 				[ Default to true ]
 				'''
 		}
+
+		GenerateItem: {
+			Label: Generate Item
+			Tooltip: Generate items , deprecated
+		}
 	}
 }
